@@ -11,7 +11,7 @@ const Artist = require('../models/artist')
 
 module.exports = (criteria, sortProperty, offset = 0, limit = 20) => {
   const query = Artist.find(buildQuery(criteria)) // Dynamic query building
-    .sort({ [sortProperty]: 1 })
+    .sort({ [sortProperty]: 1 }) // Can't use template strings here (are only expressions)
     .skip(offset)
     .limit(limit)
 
@@ -29,6 +29,16 @@ module.exports = (criteria, sortProperty, offset = 0, limit = 20) => {
 function buildQuery(criteria) {
   const query = {}
 
+  // Need to create text index to use $text & $search.
+  // In terminal, in working directory: mongod,
+  // switch to working db: use DB_NAME,
+  // db.MODEL_NAME.createIndex({KEY_OF_FIELD: "NAME_OF_INDEX"})
+
+  if (criteria.name) {
+    // Matches entire word only
+    query.$text = { $search: criteria.name }
+  }
+
   if (criteria.age) {
     query.age = {
       $gte: criteria.age.min,
@@ -42,5 +52,6 @@ function buildQuery(criteria) {
       $lte: criteria.yearsActive.max
     }
   }
+
   return query
 }
