@@ -1,4 +1,4 @@
-const Artist = require('../models/artist');
+const Artist = require('../models/artist')
 
 /**
  * Searches through the Artist collection
@@ -8,5 +8,39 @@ const Artist = require('../models/artist');
  * @param {integer} limit How many records to return in the result set
  * @return {promise} A promise that resolves with the artists, count, offset, and limit
  */
+
 module.exports = (criteria, sortProperty, offset = 0, limit = 20) => {
-};
+  const query = Artist.find(buildQuery(criteria)) // Dynamic query building
+    .sort({ [sortProperty]: 1 })
+    .skip(offset)
+    .limit(limit)
+
+  // count() is an asynchronous function
+
+  return Promise.all([query, Artist.count()])
+    .then(results => ({
+      all: results[0],
+      count: results[1],
+      offset,
+      limit
+    }))
+}
+
+function buildQuery(criteria) {
+  const query = {}
+
+  if (criteria.age) {
+    query.age = {
+      $gte: criteria.age.min,
+      $lte: criteria.age.max
+    }
+  }
+
+  if (criteria.yearsActive) {
+    query.yearsActive = {
+      $gte: criteria.yearsActive.min,
+      $lte: criteria.yearsActive.max
+    }
+  }
+  return query
+}
