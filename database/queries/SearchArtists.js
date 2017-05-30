@@ -17,7 +17,7 @@ module.exports = (criteria, sortProperty, offset = 0, limit = 20) => {
 
   // count() is an asynchronous function
 
-  return Promise.all([query, Artist.count()])
+  return Promise.all([query, Artist.find(buildQuery(criteria)).count()])
     .then(results => ({
       all: results[0],
       count: results[1],
